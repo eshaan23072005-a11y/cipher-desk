@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cipher Desk</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Spectral+SC:wght@500&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --ink: #1c2230;
+    --ink-soft: #333c4d;
+    --paper: #ece5d3;
+    --paper-dim: #ddd4bc;
+    --brass: #b3872f;
+    --brass-bright: #d4a441;
+    --rule: rgba(28,34,48,0.16);
+    --ok: #4c6b4a;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html,body{
+    margin:0; padding:0;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Spectral', Georgia, serif;
+    min-height: 100vh;
+  }
+
+  body{
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(212,164,65,0.06), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(212,164,65,0.05), transparent 45%);
+  }
+
+  .wrap{
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 56px 28px 80px;
+  }
+
+  header{
+    display:flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 22px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  h1{
+    font-family: 'Spectral SC', 'Spectral', serif;
+    font-weight: 500;
+    font-size: 28px;
+    letter-spacing: 0.03em;
+    margin: 0;
+    color: var(--paper);
+  }
+
+  .tagline{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--brass-bright);
+    letter-spacing: 0.02em;
+  }
+
+  .desk{
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 0;
+    margin-top: 36px;
+    border: 1px solid var(--rule);
+  }
+
+  @media (max-width: 720px){
+    .desk{ grid-template-columns: 1fr; }
+  }
+
+  nav{
+    border-right: 1px solid var(--rule);
+    padding: 4px;
+  }
+  @media (max-width: 720px){
+    nav{ border-right:none; border-bottom: 1px solid var(--rule); display:flex; flex-wrap:wrap; }
+  }
+
+  .tab-group-label{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    text-transform: none;
+    color: var(--paper-dim);
+    opacity: 0.55;
+    padding: 14px 14px 4px;
+  }
+
+  button.tab{
+    display:block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    color: var(--paper);
+    font-family: 'Spectral', serif;
+    font-size: 15px;
+    padding: 10px 14px;
+    cursor: pointer;
+    opacity: 0.62;
+    border-left: 2px solid transparent;
+    transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  }
+  @media (max-width: 720px){
+    button.tab{ width: auto; border-left:none; border-bottom: 2px solid transparent; }
+  }
+
+  button.tab:hover{ opacity: 0.85; }
+
+  button.tab.active{
+    opacity: 1;
+    border-left-color: var(--brass-bright);
+    background: rgba(212,164,65,0.06);
+    color: var(--brass-bright);
+  }
+  @media (max-width: 720px){
+    button.tab.active{ border-left:none; border-bottom-color: var(--brass-bright); }
+  }
+
+  .panel{
+    padding: 32px;
+    background: rgba(236,229,211,0.02);
+  }
+
+  .panel h2{
+    font-family: 'Spectral SC', serif;
+    font-weight: 500;
+    font-size: 17px;
+    margin: 0 0 4px;
+    color: var(--paper);
+  }
+
+  .panel .desc{
+    font-size: 13.5px;
+    color: var(--paper-dim);
+    margin: 0 0 24px;
+    line-height: 1.5;
+    max-width: 60ch;
+  }
+
+  label{
+    display:block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--brass-bright);
+    letter-spacing: 0.02em;
+    margin-bottom: 6px;
+    margin-top: 18px;
+  }
+  label:first-of-type{ margin-top: 0; }
+
+  textarea, input[type=text], input[type=number]{
+    width: 100%;
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 11px 13px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  textarea:focus, input:focus{
+    outline: 2px solid var(--brass-bright);
+    outline-offset: 1px;
+  }
+
+  textarea{ min-height: 90px; }
+
+  .row{ display:flex; gap: 16px; flex-wrap: wrap; }
+  .row > div{ flex: 1; min-width: 160px; }
+
+  .actions{
+    margin-top: 26px;
+    display:flex;
+    align-items:center;
+    gap: 16px;
+  }
+
+  button.run{
+    background: var(--brass);
+    color: var(--ink);
+    border: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    padding: 11px 22px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  button.run:hover{ background: var(--brass-bright); }
+
+  .hint{
+    font-size: 12px;
+    color: var(--paper-dim);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .output-block{
+    margin-top: 28px;
+    border-top: 1px solid var(--rule);
+    padding-top: 20px;
+  }
+
+  .output-label{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--paper-dim);
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    margin-bottom: 10px;
+  }
+
+  .found{
+    color: var(--ok);
+  }
+
+  .output-text{
+    background: var(--paper);
+    color: var(--ink);
+    padding: 16px 18px;
+    border-radius: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 48px;
+    border: 1px solid var(--rule);
+  }
+
+  .copy-btn{
+    background:none;
+    border: 1px solid var(--paper-dim);
+    color: var(--paper-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    padding: 3px 9px;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  .copy-btn:hover{ border-color: var(--brass-bright); color: var(--brass-bright); }
+
+  footer{
+    margin-top: 48px;
+    text-align:center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--paper-dim);
+    opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Cipher Desk</h1>
+    <div class="tagline">CAESAR &amp; VIGEN&Egrave;RE &mdash; ENCODE / DECODE / BREAK</div>
+  </header>
+
+  <div class="desk">
+    <nav>
+      <div class="tab-group-label">Caesar</div>
+      <button class="tab active" data-tab="c-enc">Encrypt</button>
+      <button class="tab" data-tab="c-dec">Decrypt</button>
+      <button class="tab" data-tab="c-break">Break cipher</button>
+      <div class="tab-group-label">Vigen&egrave;re</div>
+      <button class="tab" data-tab="v-enc">Encrypt</button>
+      <button class="tab" data-tab="v-dec">Decrypt</button>
+      <button class="tab" data-tab="v-break">Break cipher</button>
+    </nav>
+
+    <div class="panel">
+
+      <!-- Caesar Encrypt -->
+      <div class="pane" id="pane-c-enc">
+        <h2>Caesar &mdash; Encrypt</h2>
+        <p class="desc">Shift every letter forward by a fixed amount. Spaces and punctuation are left alone.</p>
+        <label for="c-enc-text">Plaintext</label>
+        <textarea id="c-enc-text" placeholder="Meet at the old bridge at midnight"></textarea>
+        <div class="row">
+          <div>
+            <label for="c-enc-shift">Shift (0&ndash;25)</label>
+            <input type="number" id="c-enc-shift" value="3" min="0" max="25">
+          </div>
+        </div>
+        <div class="actions">
+          <button class="run" onclick="runCaesarEncrypt()">Encrypt</button>
+        </div>
+        <div class="output-block">
+          <div class="output-label"><span>Ciphertext</span><button class="copy-btn" onclick="copyOut('c-enc-out')">Copy</button></div>
+          <div class="output-text" id="c-enc-out"></div>
+        </div>
+      </div>
+
+      <!-- Caesar Decrypt -->
+      <div class="pane" id="pane-c-dec" style="display:none">
+        <h2>Caesar &mdash; Decrypt</h2>
+        <p class="desc">Reverse a known shift to recover the original text.</p>
+        <label for="c-dec-text">Ciphertext</label>
+        <textarea id="c-dec-text" placeholder="Phhw dw wkh rog eulgjh"></textarea>
+        <div class="row">
+          <div>
+            <label for="c-dec-shift">Shift (0&ndash;25)</label>
+            <input type="number" id="c-dec-shift" value="3" min="0" max="25">
+          </div>
+        </div>
+        <div class="actions">
+          <button class="run" onclick="runCaesarDecrypt()">Decrypt</button>
+        </div>
+        <div class="output-block">
+          <div class="output-label"><span>Plaintext</span><button class="copy-btn" onclick="copyOut('c-dec-out')">Copy</button></div>
+          <div class="output-text" id="c-dec-out"></div>
+        </div>
+      </div>
+
+      <!-- Caesar Break -->
+      <div class="pane" id="pane-c-break" style="display:none">
+        <h2>Caesar &mdash; Break cipher</h2>
+        <p class="desc">No key needed. Every possible shift is tried and scored against standard English letter frequencies &mdash; the best match wins.</p>
+        <label for="c-break-text">Ciphertext</label>
+        <textarea id="c-break-text" placeholder="Wklv phvvdjh lv vhfuhw"></textarea>
+        <div class="actions">
+          <button class="run" onclick="runCaesarBreak()">Break</button>
+        </div>
+        <div class="output-block">
+          <div class="output-label"><span id="c-break-shift-label">Detected shift</span></div>
+          <div class="output-label"><span>Recovered plaintext</span><button class="copy-btn" onclick="copyOut('c-break-out')">Copy</button></div>
+          <div class="output-text" id="c-break-out"></div>
+        </div>
+      </div>
+
+      <!-- Vigenere Encrypt -->
+      <div class="pane" id="pane-v-enc" style="display:none">
+        <h2>Vigen&egrave;re &mdash; Encrypt</h2>
+        <p class="desc">Each letter is shifted by a different amount, cycling through the letters of a keyword.</p>
+        <label for="v-enc-text">Plaintext</label>
+        <textarea id="v-enc-text" placeholder="Meet at the old bridge at midnight"></textarea>
+        <div class="row">
+          <div>
+            <label for="v-enc-key">Keyword</label>
+            <input type="text" id="v-enc-key" value="LEMON">
+          </div>
+        </div>
+        <div class="actions">
+          <button class="run" onclick="runVigEncrypt()">Encrypt</button>
+        </div>
+        <div class="output-block">
+          <div class="output-label"><span>Ciphertext</span><button class="copy-btn" onclick="copyOut('v-enc-out')">Copy</button></div>
+          <div class="output-text" id="v-enc-out"></div>
+        </div>
+      </div>
+
+      <!-- Vigenere Decrypt -->
+      <div class="pane" id="pane-v-dec" style="display:none">
+        <h2>Vigen&egrave;re &mdash; Decrypt</h2>
+        <p class="desc">Reverse the keyword shifts to recover the original text.</p>
+        <label for="v-dec-text">Ciphertext</label>
+        <textarea id="v-dec-text"></textarea>
+        <div class="row">
+          <div>
+            <label for="v-dec-key">Keyword</label>
+            <input type="text" id="v-dec-key" value="LEMON">
+          </div>
+        </div>
+        <div class="actions">
+          <button class="run" onclick="runVigDecrypt()">Decrypt</button>
+        </div>
+        <div class="output-block">
+          <div class="output-label"><span>Plaintext</span><button class="copy-btn" onclick="copyOut('v-dec-out')">Copy</button></div>
+          <div class="output-text" id="v-dec-out"></div>
+        </div>
+      </div>
+
+      <!-- Vigenere Break -->
+      <div class="pane" id="pane-v-break" style="display:none">
+        <h2>Vigen&egrave;re &mdash; Break cipher</h2>
+        <p class="desc">No key needed. The key length is estimated with the Index of Coincidence, then each position in the key is solved with frequency analysis, as if it were its own Caesar cipher.</p>
+        <label for="v-break-text">Ciphertext</label>
+        <textarea id="v-break-text" placeholder="Paste a reasonably long Vigen&egrave;re-encrypted passage &mdash; the longer the text, the more reliable the guess."></textarea>
+        <div class="row">
+          <div>
+            <label for="v-break-maxlen">Max key length to try</label>
+            <input type="number" id="v-break-maxlen" value="20" min="1" max="40">
+          </div>
+        </div>
+        <div class="actions">
+          <button class="run" onclick="runVigBreak()">Break</button>
+        </div>
+        <div class="output-block">
+          <div class="output-label"><span id="v-break-key-label">Detected key</span></div>
+          <div class="output-label"><span>Recovered plaintext</span><button class="copy-btn" onclick="copyOut('v-break-out')">Copy</button></div>
+          <div class="output-text" id="v-break-out"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>letters only are shifted &mdash; spacing, punctuation and case are preserved</footer>
+</div>
+
+<script>
+const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const ENGLISH_FREQ = {
+  A:8.2,B:1.5,C:2.8,D:4.3,E:12.7,F:2.2,G:2.0,H:6.1,I:7.0,J:0.15,K:0.77,
+  L:4.0,M:2.4,N:6.7,O:7.5,P:1.9,Q:0.095,R:6.0,S:6.3,T:9.1,U:2.8,V:0.98,
+  W:2.4,X:0.15,Y:2.0,Z:0.074
+};
+
+function caesarShiftChar(ch, shift){
+  const s = ((shift % 26) + 26) % 26;
+  const code = ch.charCodeAt(0);
+  if (ch >= 'A' && ch <= 'Z'){
+    return ALPHABET[(code - 65 + s) % 26];
+  } else if (ch >= 'a' && ch <= 'z'){
+    return ALPHABET[(code - 97 + s) % 26].toLowerCase();
+  }
+  return ch;
+}
+
+function caesarEncrypt(text, shift){
+  return [...text].map(ch => caesarShiftChar(ch, shift)).join('');
+}
+function caesarDecrypt(text, shift){
+  return caesarEncrypt(text, -shift);
+}
+
+function chiSquaredScore(text){
+  const letters = [...text.toUpperCase()].filter(c => ALPHABET.includes(c));
+  const n = letters.length;
+  if (n === 0) return Infinity;
+  const counts = {};
+  for (const c of letters) counts[c] = (counts[c] || 0) + 1;
+  let score = 0;
+  for (const letter of ALPHABET){
+    const observed = counts[letter] || 0;
+    const expected = ENGLISH_FREQ[letter] / 100 * n;
+    if (expected > 0){
+      score += (observed - expected) ** 2 / expected;
+    }
+  }
+  return score;
+}
+
+function breakCaesar(ciphertext){
+  let bestShift = 0, bestScore = Infinity, bestText = ciphertext;
+  for (let shift = 0; shift < 26; shift++){
+    const candidate = caesarDecrypt(ciphertext, shift);
+    const score = chiSquaredScore(candidate);
+    if (score < bestScore){
+      bestScore = score; bestShift = shift; bestText = candidate;
+    }
+  }
+  return { shift: bestShift, text: bestText };
+}
+
+function vigenereEncrypt(text, key){
+  key = key.toUpperCase().split('').filter(c => ALPHABET.includes(c)).join('');
+  if (!key) return text;
+  let result = '', keyIndex = 0;
+  for (const ch of text){
+    if (/[a-zA-Z]/.test(ch)){
+      const shift = key.charCodeAt(keyIndex % key.length) - 65;
+      result += caesarShiftChar(ch, shift);
+      keyIndex++;
+    } else {
+      result += ch;
+    }
+  }
+  return result;
+}
+
+function vigenereDecrypt(text, key){
+  key = key.toUpperCase().split('').filter(c => ALPHABET.includes(c)).join('');
+  if (!key) return text;
+  const inverseKey = [...key].map(k => ALPHABET[(26 - (k.charCodeAt(0) - 65)) % 26]).join('');
+  return vigenereEncrypt(text, inverseKey);
+}
+
+function indexOfCoincidence(text){
+  const letters = [...text.toUpperCase()].filter(c => ALPHABET.includes(c));
+  const n = letters.length;
+  if (n <= 1) return 0;
+  const counts = {};
+  for (const c of letters) counts[c] = (counts[c] || 0) + 1;
+  let numerator = 0;
+  for (const c of Object.values(counts)) numerator += c * (c - 1);
+  return numerator / (n * (n - 1));
+}
+
+function guessKeyLength(ciphertext, maxLen){
+  const lettersOnly = [...ciphertext.toUpperCase()].filter(c => ALPHABET.includes(c));
+  let bestLen = 1, bestAvgIoc = 0;
+  for (let k = 1; k <= maxLen; k++){
+    const groups = [];
+    for (let i = 0; i < k; i++) groups.push([]);
+    lettersOnly.forEach((c, idx) => groups[idx % k].push(c));
+    const iocs = groups.filter(g => g.length > 1).map(g => indexOfCoincidence(g.join('')));
+    if (iocs.length === 0) continue;
+    const avgIoc = iocs.reduce((a,b) => a+b, 0) / iocs.length;
+    if (avgIoc > bestAvgIoc){
+      bestAvgIoc = avgIoc; bestLen = k;
+    }
+  }
+  return bestLen;
+}
+
+function breakVigenere(ciphertext, maxKeyLen){
+  const keyLen = guessKeyLength(ciphertext, maxKeyLen);
+  const lettersOnly = [...ciphertext.toUpperCase()].filter(c => ALPHABET.includes(c));
+  let key = '';
+  for (let i = 0; i < keyLen; i++){
+    const group = [];
+    for (let j = i; j < lettersOnly.length; j += keyLen) group.push(lettersOnly[j]);
+    const { shift } = breakCaesar(group.join(''));
+    key += ALPHABET[shift];
+  }
+  return { key, text: vigenereDecrypt(ciphertext, key) };
+}
+
+// --- UI wiring ---
+
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.pane').forEach(p => p.style.display = 'none');
+    btn.classList.add('active');
+    document.getElementById('pane-' + btn.dataset.tab).style.display = 'block';
+  });
+});
+
+function runCaesarEncrypt(){
+  const text = document.getElementById('c-enc-text').value;
+  const shift = parseInt(document.getElementById('c-enc-shift').value, 10) || 0;
+  document.getElementById('c-enc-out').textContent = caesarEncrypt(text, shift);
+}
+function runCaesarDecrypt(){
+  const text = document.getElementById('c-dec-text').value;
+  const shift = parseInt(document.getElementById('c-dec-shift').value, 10) || 0;
+  document.getElementById('c-dec-out').textContent = caesarDecrypt(text, shift);
+}
+function runCaesarBreak(){
+  const text = document.getElementById('c-break-text').value;
+  const { shift, text: plain } = breakCaesar(text);
+  document.getElementById('c-break-shift-label').innerHTML =
+    'Detected shift &nbsp; <span class="found">' + shift + '</span>';
+  document.getElementById('c-break-out').textContent = plain;
+}
+function runVigEncrypt(){
+  const text = document.getElementById('v-enc-text').value;
+  const key = document.getElementById('v-enc-key').value;
+  document.getElementById('v-enc-out').textContent = vigenereEncrypt(text, key);
+}
+function runVigDecrypt(){
+  const text = document.getElementById('v-dec-text').value;
+  const key = document.getElementById('v-dec-key').value;
+  document.getElementById('v-dec-out').textContent = vigenereDecrypt(text, key);
+}
+function runVigBreak(){
+  const text = document.getElementById('v-break-text').value;
+  const maxLen = parseInt(document.getElementById('v-break-maxlen').value, 10) || 20;
+  const { key, text: plain } = breakVigenere(text, maxLen);
+  document.getElementById('v-break-key-label').innerHTML =
+    'Detected key &nbsp; <span class="found">' + key + '</span>';
+  document.getElementById('v-break-out').textContent = plain;
+}
+
+function copyOut(id){
+  const el = document.getElementById(id);
+  if (el.textContent) navigator.clipboard.writeText(el.textContent);
+}
+</script>
+</body>
+</html>
